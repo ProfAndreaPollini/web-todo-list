@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="//unpkg.com/alpinejs" defer></script>
+</head>
+<body>
+    <div class="max-w-md mx-auto bg-white shadow-lg rounded-lg overflow-hidden mt-16">
+        <div class="px-4 py-2">
+            <h1 class="text-gray-800 font-bold text-2xl uppercase">To-Do List</h1>
+        </div>
+        <!-- add todo-->
+        <form class="w-full max-w-sm mx-auto px-4 py-2" x-data>
+            <div class="flex items-center border-b-2 border-teal-500 py-2">
+                <input x-model="$store.new_todo.content"
+                    class="appearance-none bg-transparent border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none"
+                    type="text" placeholder="Add a task">
+                <button
+                    class="flex-shrink-0 bg-teal-500 hover:bg-teal-700 border-teal-500 hover:border-teal-700 text-sm border-4 text-white py-1 px-2 rounded"
+                    type="button" @click="AddTodo($store.new_todo.content)">
+                    Add
+                </button>
+            </div>
+        </form>
+        <!-- /add todo-->
+        <ul class="divide-y divide-gray-200 px-4">
+            <template x-data x-for="todo in $store.data.todos">
+            <li class="py-4">
+                <div class="flex items-center">
+                    <input id="todo1" name="todo1" type="checkbox"
+                        class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded">
+                    <label for="todo1" class="ml-3 block text-gray-900">
+                        <span class="text-lg font-medium" x-text="todo.content"></span>
+                        <!-- <span class="text-sm font-light text-gray-500">Due on 4/1/23</span> -->
+                    </label>
+                    <template x-if="todo.done == 1">
+                        <span>done</span>
+                    </template>
+
+                </div>
+            </li>
+        </template>
+        </ul>
+    </div>
+    <script>
+        async function getTodos() {
+            const response = await fetch('/api/todos')
+            const data = await response.json()
+            return data
+        }
+
+        async function AddTodo(content) {
+            const response = await fetch('/api/todos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ content: content }),
+            })
+            const data = await response.json()
+                
+            Alpine.store("new_todo",{content:""})
+                
+            await getTodos().then(data => {
+                Alpine.store("data",data)
+                })
+            
+            return data
+        }
+
+        document.addEventListener("alpine:init", () => {
+            Alpine.store("data",[])
+            Alpine.store("new_todo",{content:""})
+            getTodos().then(data => {
+                Alpine.store("data",data)
+            })
+        })
+    </script>
+</body>
+</html>
